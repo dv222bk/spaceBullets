@@ -1,0 +1,14 @@
+lib
+bin
+obj
+*.pdb
+*.idb
+*.ncb
+*.suo
+*.sdf
+*.user
+*.filters
+*.opensdf
+BuildLog.htm
+NvTriStripper/Release
+NvTriStripper/Debug
