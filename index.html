@@ -1,0 +1,21 @@
+<html>
+	<head>
+	  <title>S.P.A.C.E.B.U.L.L.E.T.S</title>
+		<link rel="stylesheet" type="text/css" href="content/css/site.css" />
+    <script src="turbulenz_engine/jslib/debug.js"></script>
+		<script src="turbulenz_engine/jslib/webgl/turbulenzengine.js"></script>
+		<script src="turbulenz_engine/jslib/webgl/graphicsdevice.js"></script>
+		<script src="turbulenz_engine/jslib/draw2d.js"></script>
+	</head>
+	<body>
+			<div id="canvasHolder">
+				<canvas id="canvas" width="1200px" height="800px" />
+			</div>
+			<script>
+				TurbulenzEngine = WebGLTurbulenzEngine.create({
+					canvas: document.getElementById("canvas")
+				});
+			</script>
+	    <script src="scripts/core.js"></script>
+	</body>
+</html>
