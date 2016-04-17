@@ -144,6 +144,7 @@ SPACEBULLETS.GameCore.prototype.generatePlayFieldDrawObjects = function() {
   this.saveEntity(drawMenu);
 };
 
+SPACEBULLETS.SpriteEntity = function() {
   var sprite, texture, textureCordinates, width, height, color,
       rotation, scale, xCord, yCord, shear, spriteOrigin;
 
@@ -381,6 +382,7 @@ SPACEBULLETS.Player = function(core) {
   core.saveEntity(this);
 };
 
+SPACEBULLETS.Player.prototype = new SPACEBULLETS.SpriteEntity();
 
 SPACEBULLETS.EntityList = function() {
   var entities = []
