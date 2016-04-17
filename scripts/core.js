@@ -3,8 +3,8 @@
 var SPACEBULLETS = SPACEBULLETS || {};
 
 SPACEBULLETS.GameCore = function() {
-  var graphicsDevice, draw2D, updateFunctions, drawObjects,
-  drawAdditiveObjects
+  var graphicsDevice, draw2D, updateFunctions, player,
+  entityList, utilities;
 
   TurbulenzEngine.onerror = function gameErrorFn(msg) {
     // Handle the error, using msg to inform the developer
@@ -19,12 +19,6 @@ SPACEBULLETS.GameCore = function() {
     graphicsDevice: graphicsDevice
   });
 
-  // Static objects
-  drawObjects = [];
-
-  // Objects that need to move in some way
-  drawAdditiveObjects = [];
-
   this.getGraphicsDevice = function() {
     return graphicsDevice;
   };
@@ -33,28 +27,49 @@ SPACEBULLETS.GameCore = function() {
     return draw2D;
   };
 
-  this.saveDrawObject = function(drawObject) {
-    drawObjects.push(drawObject);
+  this.getPlayer = function() {
+    return player;
   };
 
-  this.getDrawObjects = function() {
-    return drawObjects;
+  this.setPlayer = function(a_player) {
+    player = a_player;
   };
 
-  this.saveDrawAdditiveObjects = function(drawAdditiveObject) {
-    drawAdditiveObjects.push(drawAdditiveObject);
+  this.getEntities = function(a_entityType) {
+    return entityList.getEntities();
   };
 
-  this.getDrawAdditiveObjects = function() {
-    return drawAdditiveObjects;
+  this.getEntitiy = function(a_entityID) {
+    return entityList.getEntitiy(a_entityID);
+  }
+
+  this.updateEntity = function(a_updatedEntity) {
+    return entityList.update(a_updatedEntity);
   };
+
+  this.saveEntity = function(a_entity) {
+     return entityList.save(a_entity);
+  };
+
+  this.removeEntity = function(a_entityID) {
+    return entityList.removeEntity(a_entityID);
+  }
+
+  this.getUtilities = function() {
+    return utilities;
+  }
 
   // Sequence
+  utilities = new SPACEBULLETS.Utilities();
+  entityList = new SPACEBULLETS.EntityList();
   this.generatePlayFieldDrawObjects();
+  player = new SPACEBULLETS.Player(this);
 
   // Update
   function update() {
-    var bgColor, drawObject;
+    var bgColor, drawEntity, entities;
+
+    entities = entityList.getEntities();
 
     bgColor = [1.0, 1.0, 0.0, 1.0];
 
@@ -62,20 +77,18 @@ SPACEBULLETS.GameCore = function() {
       graphicsDevice.clear(bgColor, 1.0);
 
       /* Rendering code */
-      if(drawObjects.length > 0) {
-        draw2D.begin();
-        for(drawObject = 0; drawObject < drawObjects.length; drawObject += 1) {
-          draw2D.draw(drawObjects[drawObject]);
+      if(entities.length > 0) {
+        for(drawEntity = 0; drawEntity < entities.length; drawEntity += 1) {
+          if(entities[drawEntity].drawAdditive === 1) {
+            draw2D.begin('additive');
+            draw2D.drawSprite(entities[drawEntity].draw());
+            draw2D.end();
+          } else {
+            draw2D.begin();
+            draw2D.draw(entities[drawEntity].draw());
+            draw2D.end();
+          }
         }
-        draw2D.end();
-      }
-
-      if(drawAdditiveObjects.length > 0) {
-        draw2D.begin('additive');
-        for(drawObject = 0; drawObject < drawAdditiveObjects.length; drawObject += 1) {
-          draw2D.draw(drawAdditiveObjects[drawObject]);
-        }
-        draw2D.end();
       }
 
       graphicsDevice.endFrame();
@@ -87,6 +100,7 @@ SPACEBULLETS.GameCore = function() {
 
 SPACEBULLETS.GameCore.prototype.generatePlayFieldDrawObjects = function() {
   var graphicsDevice, playField, menu, drawPlayField, drawMenu;
+  var that = this;
 
   graphicsDevice = this.getGraphicsDevice();
 
@@ -105,17 +119,329 @@ SPACEBULLETS.GameCore.prototype.generatePlayFieldDrawObjects = function() {
   ];
 
   drawPlayField = {
-    color: [1.0, 0.0, 0.0, 1.0],
-    destinationRectangle: playField
+    id: that.getUtilities().randomID(),
+    drawAdditive: 0,
+    draw: function() {
+      return {
+        color: [1.0, 0.0, 0.0, 1.0],
+        destinationRectangle: playField
+      }
+    }
   };
 
   drawMenu = {
-    color: [0.0, 1.0, 0.0, 1.0],
-    destinationRectangle: menu
+    id: that.getUtilities().randomID(),
+    drawAdditive: 0,
+    draw: function() {
+      return {
+        color: [0.0, 1.0, 0.0, 1.0],
+        destinationRectangle: menu
+      }
+    }
   };
 
-  this.saveDrawObject(drawPlayField);
-  this.saveDrawObject(drawMenu);
+  this.saveEntity(drawPlayField);
+  this.saveEntity(drawMenu);
+};
+
+  var sprite, texture, textureCordinates, width, height, color,
+      rotation, scale, xCord, yCord, shear, spriteOrigin;
+
+  // standard values
+  sprite = null;
+  texture = null;
+  textureCordinates = [0, 0, 25, 25];
+  width = 25;
+  height = 25;
+  color = [1, 1, 1, 1];
+  xCord = 25;
+  yCord = 25;
+  rotation = 0;
+  spriteOrigin = [width / 2, height / 2];
+  scale = [1, 1];
+  shear = [0, 0];
+
+  this.setTextureCordinates = function(newCords) {
+    textureCordinates = newCords;
+    if(sprite) {
+      sprite.setTextureRectangle([0, 0, texture.width, texture.height]);
+    }
+  };
+
+  this.getTextureCordinates = function() {
+    return cordinates;
+  };
+
+  this.setTexture = function(a_texture) {
+    texture = a_texture;
+    if(sprite) {
+      sprite.setTexture(texture);
+      sprite.setTextureRectangle([0, 0, texture.width, texture.height]);
+    }
+  };
+
+  this.getTexture = function() {
+    return texture;
+  };
+
+  this.setWidth = function(a_width) {
+    width = a_width;
+    if(sprite) {
+      sprite.setWidth(a_width);
+    }
+  };
+
+  this.getWidth = function() {
+    return width;
+  };
+
+  this.setHeight = function(a_height) {
+    height = a_height;
+    if(sprite) {
+      sprite.setHeight(a_height);
+    }
+  };
+
+  this.getHeight = function() {
+    return height;
+  };
+
+  this.setColor = function(a_color) {
+    color = a_color
+    if(sprite) {
+      sprite.setTexture(a_color);
+    }
+  };
+
+  this.getColor = function() {
+    return color;
+  };
+
+  this.setXCord = function(a_xCord) {
+    xCord = a_xCord;
+    if(sprite) {
+      sprite.x = a_xCord;
+    }
+  };
+
+  this.getXCord = function() {
+    return xCord;
+  };
+
+  this.setYCord = function(a_yCord) {
+    yCord = a_yCord;
+    if(sprite) {
+      sprite.y = a_yCord;
+    }
+  };
+
+  this.getYCord = function() {
+    return yCord;
+  };
+
+  this.setCords = function(cords) {
+    xCord = cords[0];
+    yCord = cords[1];
+    if(sprite) {
+      sprite.x = cords[0];
+      sprite.y = cords[1];
+    }
+  };
+
+  this.getCords = function() {
+    return [xCord, yCord];
+  };
+
+  this.setRotation = function(a_rotation) {
+    rotation = a_rotation;
+    if(sprite) {
+      sprite.rotation = a_rotation
+    }
+  };
+
+  this.getRotation = function() {
+    return rotation;
+  };
+
+  this.setSpriteOrigin = function(a_spriteOrigin) {
+    spriteOrigin = a_spriteOrigin;
+    if(sprite) {
+      sprite.setOrigin(a_spriteOrigin);
+    }
+  };
+
+  this.getSpriteOrigin = function() {
+    return spriteOrigin;
+  };
+
+  this.setScale = function(a_scale) {
+    scale = a_scale;
+    if(sprite) {
+      sprite.setScale(a_scale);
+    }
+  };
+
+  this.getScale = function() {
+    return scale;
+  };
+
+  this.setShear = function(a_shear) {
+    shear = a_shear;
+    if(sprite) {
+      sprite.setShear(a_shear);
+    }
+  };
+
+  this.getShear = function() {
+    return shear;
+  };
+
+  this.setSprite = function(a_sprite) {
+    sprite = a_sprite;
+  };
+
+  this.getSprite = function() {
+    return sprite;
+  };
+
+  this.createSprite = function(spriteDetails) {
+    if(!spriteDetails) {
+      spriteDetails = {};
+    }
+    if(spriteDetails.texture) {
+      texture = spriteDetails.texture;
+    }
+
+    if(spriteDetails.textureCordinates) {
+      textureCordinates = spriteDetails.textureCordinates;
+    }
+
+    if(spriteDetails.width) {
+      width = spriteDetails.width;
+    }
+
+    if(spriteDetails.height) {
+      height = spriteDetails.height;
+    }
+
+    if(spriteDetails.color) {
+      color = spriteDetails.color;
+    }
+
+    if(spriteDetails.xCord) {
+      xCord = spriteDetails.xCord;
+    }
+
+    if(spriteDetails.yCord) {
+      yCord = spriteDetails.yCord;
+    }
+
+    if(spriteDetails.rotation) {
+      rotation = spriteDetails.rotation;
+    }
+
+    if(spriteDetails.spriteOrigin) {
+      spriteOrigin = spriteDetails.spriteOrigin;
+    }
+
+    if(spriteDetails.scale) {
+      scale = spriteDetails.scale;
+    }
+
+    if(spriteDetails.shear) {
+      shear = spriteDetails.shear;
+    }
+
+    sprite = Draw2DSprite.create({
+      texture : texture,
+      textureRectangle : textureCordinates,
+      width : width,
+      height : height,
+      color : color,
+      x : xCord,
+      y : yCord,
+      rotation : rotation,
+      origin : spriteOrigin,
+      scale : scale,
+      shear : shear
+    });
+  };
+};
+
+SPACEBULLETS.Player = function(core) {
+  var that = this;
+  this.id = core.getUtilities().randomID();
+  this.drawAdditive = 1;
+  this.createSprite();
+
+  this.draw = function() {
+    return that.getSprite();
+  }
+
+  core.saveEntity(this);
+};
+
+
+SPACEBULLETS.EntityList = function() {
+  var entities = []
+
+  this.getEntities = function() {
+    return entities;
+  }
+};
+
+SPACEBULLETS.EntityList.prototype.save = function(a_entity) {
+  this.getEntities().push(a_entity);
+};
+
+SPACEBULLETS.EntityList.prototype.update = function(a_updatedEntity) {
+  var entity, entities;
+  entities = this.getEntities();
+  for(entity = 0; entity < entities; entity += 1) {
+    if(entities[entity].id === a_updatedEntity.id) {
+      entities[entity].id = a_updatedEntity.id;
+      return true;
+    }
+  }
+  return false;
+};
+
+SPACEBULLETS.EntityList.prototype.getEntitiy = function(a_entityID) {
+  var entity, entities;
+  entities = this.getEntities();
+  for(entity = 0; entity < entities; entity += 1) {
+    if(entities[entity].id === a_entityID) {
+      return entities[entity];
+    }
+  }
+  return false;
+};
+
+SPACEBULLETS.EntityList.prototype.removeEntity = function(a_entityID) {
+  var entity, entities;
+  entities = this.getEntities();
+  for(entity = 0; entity < entities; entity += 1) {
+    if(entities[entity].id === a_entityID) {
+      entities.splice(entity, 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+SPACEBULLETS.Utilities = function() {
+
+};
+
+SPACEBULLETS.Utilities.prototype.randomID = function() {
+  //http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+
+  return s4() + s4() + s4() + s4() + s4();
 }
 
 window.onload = function() {
