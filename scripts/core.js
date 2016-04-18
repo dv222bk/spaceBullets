@@ -79,6 +79,8 @@ SPACEBULLETS.GameCore = function() {
       /* Rendering code */
       if(entities.length > 0) {
         for(drawEntity = 0; drawEntity < entities.length; drawEntity += 1) {
+          // if the entity has a movement function, run it
+          entities[drawEntity].movement ? entities[drawEntity].movement() : null;
           if(entities[drawEntity].drawAdditive === 1) {
             draw2D.begin('additive');
             draw2D.drawSprite(entities[drawEntity].draw());
@@ -370,10 +372,71 @@ SPACEBULLETS.SpriteEntity = function() {
 };
 
 SPACEBULLETS.Player = function(core) {
+  var inputDevice, keyCodes, sprite, onKeyDown, onKeyUp,
+  upPressed, downPressed, rightPressed, leftPressed, movementSpeed;
   var that = this;
+
+  upPressed, downPressed, rightPressed, leftPressed = false;
+  movementSpeed = 8;
+
   this.id = core.getUtilities().randomID();
   this.drawAdditive = 1;
   this.createSprite();
+
+  inputDevice = TurbulenzEngine.createInputDevice();
+  keyCodes = inputDevice.keyCodes;
+  sprite = this.getSprite();
+
+  this.movement = function() {
+    if(leftPressed) {
+      sprite.x -= movementSpeed;
+    }
+
+    if(rightPressed) {
+      sprite.x += movementSpeed;
+    }
+
+    if(upPressed) {
+      sprite.y -= movementSpeed;
+    }
+
+    if(downPressed) {
+      sprite.y += movementSpeed;
+    }
+  };
+
+  onKeyDown = function onKeyDownFn(keycode) {
+      if (keycode === keyCodes.LEFT) {
+        leftPressed = true;
+      } else if (keycode === keyCodes.RIGHT) {
+        rightPressed = true;
+      } else if (keycode === keyCodes.UP) {
+        upPressed = true;
+      } else if (keycode === keyCodes.DOWN) {
+        downPressed = true;
+      } else if (keycode === keyCodes.LEFT_SHIFT ||
+        keycode === keyCodes.RIGHT_SHIFT) {
+        movementSpeed = 4;
+      }
+  };
+
+  onKeyUp = function onKeyUpFn(keycode) {
+      if (keycode === keyCodes.LEFT) {
+        leftPressed = false;
+      } else if (keycode === keyCodes.RIGHT) {
+        rightPressed = false;
+      } else if (keycode === keyCodes.UP) {
+        upPressed = false;
+      } else if (keycode === keyCodes.DOWN) {
+        downPressed = false;
+      } else if (keycode === keyCodes.LEFT_SHIFT ||
+        keycode === keyCodes.RIGHT_SHIFT) {
+        movementSpeed = 8;
+      }
+  };
+
+  inputDevice.addEventListener('keydown', onKeyDown);
+  inputDevice.addEventListener('keyup', onKeyUp);
 
   this.draw = function() {
     return that.getSprite();
@@ -436,7 +499,7 @@ SPACEBULLETS.Utilities = function() {
 };
 
 SPACEBULLETS.Utilities.prototype.randomID = function() {
-  //http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+  // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
       .toString(16)
