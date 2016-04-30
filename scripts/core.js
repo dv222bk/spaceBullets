@@ -80,6 +80,7 @@
         entityList = new SPACEBULLETS.EntityList();
         this.generatePlayFieldDrawObjects();
         player = new SPACEBULLETS.Player(this);
+        var testEnemy = new SPACEBULLETS.Enemy(this);
 
         // Update
         function update() {
@@ -430,6 +431,53 @@
     };
 
     SPACEBULLETS.Player.prototype = new SPACEBULLETS.SpriteEntity();
+
+    SPACEBULLETS.Enemy = function (core) {
+        var playFieldDimensions = core.getPlayFieldDimensions(),
+            spriteDetails = {},
+            that = this;
+
+        this.id = core.getUtilities().randomID();
+
+        this.setColor([1, 1, 0.5, 1]);
+        this.setXCord(parseInt(playFieldDimensions[2] / 2));
+        this.setYCord(parseInt(playFieldDimensions[3] / 2));
+
+        this.drawAdditive = 1;
+        this.createSprite();
+        this.sprite = this.getSprite();
+
+        console.log(this.sprite.getColor());
+
+        this.movement = function () {
+
+        };
+
+        this.bulletPattern = function () {
+
+        };
+
+        this.setMovement = function (newMovement) {
+            that.movement = newMovement;
+        };
+
+        this.setBulletPattern = function (newBulletPattern) {
+            that.bulletPattern = newBulletPattern;
+        };
+
+        this.setSpriteDetails = function (newSpriteDetails) {
+            spriteDetails = newSpriteDetails;
+            that.createSprite(spriteDetails);
+        };
+
+        this.draw = function () {
+            return that.getSprite();
+        };
+
+        core.saveEntity(this);
+    };
+
+    SPACEBULLETS.Enemy.prototype = new SPACEBULLETS.SpriteEntity();
 
     SPACEBULLETS.EntityList = function () {
         var entities = [];
