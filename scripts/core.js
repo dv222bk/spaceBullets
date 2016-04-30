@@ -59,6 +59,24 @@ SPACEBULLETS.GameCore = function() {
     return utilities;
   }
 
+  this.getPlayFieldDimensions = function() {
+    return [
+      0,
+      0,
+      graphicsDevice.width * 0.75,
+      graphicsDevice.height
+    ];
+  }
+
+  this.getMenuDimensions = function() {
+    return [
+      graphicsDevice.width * 0.75,
+      0,
+      graphicsDevice.width,
+      graphicsDevice.height
+    ];
+  }
+
   // Sequence
   utilities = new SPACEBULLETS.Utilities();
   entityList = new SPACEBULLETS.EntityList();
@@ -101,24 +119,8 @@ SPACEBULLETS.GameCore = function() {
 };
 
 SPACEBULLETS.GameCore.prototype.generatePlayFieldDrawObjects = function() {
-  var graphicsDevice, playField, menu, drawPlayField, drawMenu;
+  var graphicsDevice, drawPlayField, drawMenu;
   var that = this;
-
-  graphicsDevice = this.getGraphicsDevice();
-
-  playField = [
-    0,
-    0,
-    graphicsDevice.width * 0.75,
-    graphicsDevice.height
-  ];
-
-  menu = [
-    graphicsDevice.width * 0.75,
-    0,
-    graphicsDevice.width,
-    graphicsDevice.height
-  ];
 
   drawPlayField = {
     id: that.getUtilities().randomID(),
@@ -126,7 +128,7 @@ SPACEBULLETS.GameCore.prototype.generatePlayFieldDrawObjects = function() {
     draw: function() {
       return {
         color: [1.0, 0.0, 0.0, 1.0],
-        destinationRectangle: playField
+        destinationRectangle: that.getPlayFieldDimensions()
       }
     }
   };
@@ -137,7 +139,7 @@ SPACEBULLETS.GameCore.prototype.generatePlayFieldDrawObjects = function() {
     draw: function() {
       return {
         color: [0.0, 1.0, 0.0, 1.0],
-        destinationRectangle: menu
+        destinationRectangle: that.getMenuDimensions()
       }
     }
   };
@@ -388,20 +390,38 @@ SPACEBULLETS.Player = function(core) {
   sprite = this.getSprite();
 
   this.movement = function() {
+    var playFieldDimensions = core.getPlayFieldDimensions();
+
     if(leftPressed) {
-      sprite.x -= movementSpeed;
+      if(sprite.x - (sprite.getWidth() / 2) > playFieldDimensions[0]) {
+        sprite.x -= movementSpeed;
+      } else {
+        sprite.x = playFieldDimensions[0] + (sprite.getWidth() / 2);
+      }
     }
 
     if(rightPressed) {
-      sprite.x += movementSpeed;
+      if(sprite.x + (sprite.getWidth() / 2) < playFieldDimensions[2]) {
+        sprite.x += movementSpeed;
+      } else {
+        sprite.x = playFieldDimensions[2] - (sprite.getWidth() / 2);
+      }
     }
 
     if(upPressed) {
-      sprite.y -= movementSpeed;
+      if(sprite.y - (sprite.getHeight() / 2) > playFieldDimensions[1]) {
+        sprite.y -= movementSpeed;
+      } else {
+        sprite.y = playFieldDimensions[1] + (sprite.getHeight() / 2);
+      }
     }
 
     if(downPressed) {
-      sprite.y += movementSpeed;
+      if(sprite.y + (sprite.getHeight() / 2) < playFieldDimensions[3]) {
+        sprite.y += movementSpeed;
+      } else {
+        sprite.y = playFieldDimensions[3] - (sprite.getHeight() / 2);
+      }
     }
   };
 
